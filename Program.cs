@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+var port = Environment.GetEnvironmentVariable("PORT" ) ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 var repository = new JsonFileRepository(builder.Configuration["DataDirectory"] ?? Path.Combine(builder.Environment.ContentRootPath, "App_Data"));
 builder.Services.AddSingleton(repository);
 builder.Services.AddScoped<AuthService>();
