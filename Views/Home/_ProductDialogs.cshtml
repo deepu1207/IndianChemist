@@ -1,0 +1,55 @@
+<dialog id="editor">
+<form id="product-form">
+<div class="modal-heading">
+<div class="eyebrow">PRODUCT INFORMATION</div>
+<button type="button" class="close secondary" id="close" aria-label="Close">Ã—</button>
+<h2 id="editor-title">Add product</h2>
+</div>
+<input id="product-id" type="hidden">
+<div class="fields">
+<label>Product name<input name="name" required maxlength="150">
+</label>
+<label>Email address<input name="email" type="email" required>
+</label>
+<label class="wide">Description<textarea name="description" required maxlength="2000" rows="3">
+</textarea>
+</label>
+<label>Price<input name="price" type="number" min="0" max="999999999" step="any" required>
+</label>
+<label>Quantity<input name="quantity" type="number" min="1" max="2147483647" step="1" required>
+</label>
+<label>Country<select name="countryId" id="country" required>
+<option value="">Select country</option>
+</select>
+</label>
+<label>State<select name="stateId" id="state" disabled required>
+<option value="">Select state</option>
+</select>
+</label>
+<label>City<select name="cityId" id="city" disabled required>
+<option value="">Select city</option>
+</select>
+</label>
+<fieldset>
+<legend>Sex</legend>
+<label>
+<input type="radio" name="sex" value="Male" required> Male</label>
+<label>
+<input type="radio" name="sex" value="Female"> Female</label>
+<label>
+<input type="radio" name="sex" value="Other"> Other</label>
+</fieldset>
+</div>
+<p id="form-error" role="alert">
+</p>
+<div class="modal-footer">
+<button type="button" class="secondary" id="cancel">Cancel</button>
+<button id="save">Save product</button>
+</div>
+</form>
+</dialog>
+<dialog id="detail">
+<div id="detail-content">
+</div>
+<button id="detail-close" class="secondary">Close</button>
+</dialog>

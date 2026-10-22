@@ -1,0 +1,88 @@
+@model WorkspaceViewModel
+@{ ViewData["Title"] = Model.Title; }
+<aside>
+<a class="brand" href="/">âœš <span>Indian Chemist<small>PRODUCT WORKSPACE</small>
+</span>
+</a>
+<div class="nav-label">WORKSPACE</div>
+<div class="nav active">â–¦ &nbsp; Products</div>
+<div class="side-bottom">
+<span class="dot">
+</span> Secure product management<small>Built around your everyday work.</small>
+</div>
+</aside>
+<div class="shell">
+<header>
+<span>Workspace <span class="muted">/ Products</span>
+</span>
+<div id="identity">Account access</div>
+</header>
+<main>
+<div class="eyebrow">YOUR PRODUCT WORKSPACE</div>
+<div class="heading">
+<div>
+<h1>@Model.Heading</h1>
+<p class="muted">@Model.Subtitle</p>
+</div>
+<button id="add" hidden>ï¼‹ Add product</button>
+</div>
+<partial name="_AccountForms" />
+<section id="workspace" hidden>
+<div class="stats">
+<div>
+<span>Total products</span>
+<strong id="count">0</strong>
+<small>In your catalog</small>
+</div>
+<div>
+<span>Total quantity</span>
+<strong id="quantity">0</strong>
+<small>Across all products</small>
+</div>
+<div>
+<span>Your access</span>
+<strong id="role">User</strong>
+<small id="role-note">View product information</small>
+</div>
+</div>
+<div class="catalog">
+<div class="toolbar">
+<div>
+<h2>Product catalog <span id="badge">0</span>
+</h2>
+<p class="muted">Browse and review your product information.</p>
+</div>
+<input type="search" id="search" placeholder="Search productsâ€¦" aria-label="Search products">
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>PRODUCT</th>
+<th>EMAIL</th>
+<th>PRICE</th>
+<th>QUANTITY</th>
+<th>SEX</th>
+<th>
+</th>
+</tr>
+</thead>
+<tbody id="rows">
+</tbody>
+</table>
+</div>
+<div id="empty" class="empty">
+<div>â–¦</div>
+<h3>Your catalog starts here</h3>
+<p class="muted" id="empty-text">Products will appear here once an administrator adds them.</p>
+</div>
+<div class="table-footer">Product information Â· Indian Chemist</div>
+</div>
+</section>
+<div id="notice" role="status">
+</div>
+<footer>Indian Chemist <span>Product workspace</span>
+</footer>
+</main>
+</div>
+<partial name="_ProductDialogs" />
