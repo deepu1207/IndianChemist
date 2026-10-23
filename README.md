@@ -16,17 +16,16 @@ Open http://localhost:5080. The Development launch profile enables local email p
 
 ## First use
 
-1. Create an account. Passwords need 10–128 characters.
-2. With no SMTP configured, a Development email preview appears after registration. Click its verification link, then sign in.
-3. Ordinary accounts receive the User role and can view products.
-4. To test Admin access, register admin@indianchemist.local and verify it through the same preview. Choose your own password; no account or password is pre-created.
-5. Admin accounts can add, edit, view, and delete products. All product writes are also protected in the API.
+1. Create an account. Passwords need 10–128 characters. Accounts are activated immediately and signed in automatically; email delivery is not required.
+2. Ordinary accounts receive the User role and can view products.
+3. To test Admin access, register admin@indianchemist.local. Choose your own password; no account or password is pre-created.
+4. Admin accounts can add, edit, view, and delete products. All product writes are also protected in the API.
 
 Set Admin:Email in appsettings.json to your own email **before registering** to designate a different administrator. Existing account roles do not automatically change when configuration changes. Public registration cannot request an Admin role.
 
-## Email delivery and production
+## Production
 
-Set Smtp:Host, Smtp:Port, Smtp:Username, Smtp:Password, and Smtp:From. SMTP uses TLS. Set secrets using environment variables, for example Smtp__Password, rather than committing passwords. Set PublicOrigin to the trusted external HTTPS origin, and update AllowedHosts for the hostname. Run with ASPNETCORE_ENVIRONMENT=Production on an ASP.NET-capable host behind HTTPS. Production requires SMTP and never exposes verification links. Actual external email delivery has not been tested without SMTP credentials.
+Run with ASPNETCORE_ENVIRONMENT=Production on an ASP.NET-capable host behind HTTPS. Registration does not require SMTP or a configured PublicOrigin. The app issues a session immediately after account creation.
 
 The JSON file store is intended for this assignment and a single running server process. It serializes writes and replaces the data file atomically. Protect App_Data with OS access permissions and back it up together with the signing key. It is not suitable for multiple replicas or shared network storage. JWT access tokens remain valid for up to 15 minutes after logout; logout immediately revokes refresh access. One refresh session per account is supported; signing in elsewhere invalidates the previous refresh session.
 
@@ -36,9 +35,9 @@ JSON bodies use camelCase. All product and location endpoints require Authorizat
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| POST | /api/auth/register | {name,email,password}; sends verification email |
-| GET | /api/auth/verify?token=... | Verify email; link valid for 24 hours, single use |
-| POST | /api/auth/login | {email,password}; verified accounts only |
+| POST | /api/auth/register | {name,email,password}; creates and signs in an account |
+| GET | /api/auth/verify?token=... | Legacy verification endpoint |
+| POST | /api/auth/login | {email,password} |
 | POST | /api/auth/refresh | Rotate refresh cookie and obtain a new JWT |
 | POST | /api/auth/logout | Revoke refresh token and clear cookie |
 | GET | /api/products | List all products |

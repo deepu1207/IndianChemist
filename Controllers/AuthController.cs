@@ -9,7 +9,7 @@ namespace IndianChemist.Controllers;
 public class AuthController(AuthService auth) : ControllerBase
 {
     [HttpPost("register"), EnableRateLimiting("auth")]
-    public Task<IActionResult> Register([FromBody] Register model) => auth.RegisterAsync(model, HttpContext);
+    public IActionResult Register([FromBody] Register model) => auth.Register(model, HttpContext);
     [HttpGet("verify")]
     public IActionResult Verify([FromQuery] string token) => auth.Verify(token);
     [HttpPost("login"), EnableRateLimiting("auth")]

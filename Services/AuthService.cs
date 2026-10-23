@@ -3,8 +3,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
-using System.Net;
-using System.Net.Mail;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -12,7 +10,7 @@ using IndianChemist.Models;
 using IndianChemist.Repositories;
 namespace IndianChemist.Services;
 
-public class AuthService(JsonFileRepository db, IConfiguration configuration, IWebHostEnvironment environment)
+public class AuthService(JsonFileRepository db, IConfiguration configuration)
 {
     readonly PasswordHasher<Account> hasher = new();
     string Hash(string s) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(s)));
@@ -45,17 +43,11 @@ public class AuthService(JsonFileRepository db, IConfiguration configuration, IW
         });
     }
 
-    public async Task<IActionResult> RegisterAsync(Register r, HttpContext c)
+    public IActionResult Register(Register r, HttpContext c)
     {
         if (string.IsNullOrWhiteSpace(r.Name) || r.Name.Length > 100 || string.IsNullOrWhiteSpace(r.Email) || !new EmailAddressAttribute().IsValid(r.Email) || string.IsNullOrEmpty(r.Password) || r.Password.Length < 10 || r.Password.Length > 128)
             return Error("Enter a name, valid email, and password of 10–128 characters.");
-        var origin = configuration["PublicOrigin"] ?? (environment.IsDevelopment() ? $"{c.Request.Scheme}://{c.Request.Host}" : null);
-        if (origin is null)
-            return Error("PublicOrigin must be configured.", 503);
-        if (!environment.IsDevelopment() && string.IsNullOrEmpty(configuration["Smtp:Host"]))
-            return Error("Email delivery is not configured.", 503);
         Account a;
-        var raw = Random();
         lock (db.Sync)
         {
             if (db.Data.Accounts.Any(a => a.Email.Equals(r.Email.Trim(), StringComparison.OrdinalIgnoreCase)))
@@ -65,8 +57,7 @@ public class AuthService(JsonFileRepository db, IConfiguration configuration, IW
                 Id = Guid.NewGuid().ToString(),
                 Name = r.Name.Trim(),
                 Email = r.Email.Trim().ToLowerInvariant(),
-                VerificationHash = Hash(raw),
-                VerificationExpires = DateTime.UtcNow.AddHours(24)
+                Verified = true
             };
             if (a.Email.Equals(configuration["Admin:Email"], StringComparison.OrdinalIgnoreCase))
                 a.Role = "Admin";
@@ -74,27 +65,7 @@ public class AuthService(JsonFileRepository db, IConfiguration configuration, IW
             db.Data.Accounts.Add(a);
             db.Save();
         }
-        var link = $"{origin.TrimEnd('/')}/api/auth/verify?token={raw}";
-        if (!string.IsNullOrWhiteSpace(configuration["Smtp:Host"]))
-        {
-            try
-            {
-                using var smtp = new SmtpClient(configuration["Smtp:Host"], configuration.GetValue("Smtp:Port", 587)) { EnableSsl = true, Credentials = new NetworkCredential(configuration["Smtp:Username"], configuration["Smtp:Password"]) };
-                using var mail = new MailMessage(configuration["Smtp:From"]!, a.Email, "Verify your Indian Chemist account", $"Confirm your email within 24 hours: {link}");
-                await smtp.SendMailAsync(mail);
-            }
-            catch { lock (db.Sync) { db.Data.Accounts.Remove(a); db.Save(); } return Error("Email could not be sent. Check SMTP settings and register again.", 503); }
-        }
-        else if (environment.IsDevelopment())
-            return new OkObjectResult(new
-            {
-                message = "Account created. Open the development email below to verify your address.",
-                verificationUrl = link
-            });
-        return new OkObjectResult(new
-        {
-            message = "Check your email to verify your account before signing in."
-        });
+        return Issue(a, c);
     }
     public IActionResult Verify(string token)
     {
@@ -118,8 +89,6 @@ public class AuthService(JsonFileRepository db, IConfiguration configuration, IW
             var a = db.Data.Accounts.FirstOrDefault(a => a.Email.Equals(r.Email.Trim(), StringComparison.OrdinalIgnoreCase));
             if (a is null || hasher.VerifyHashedPassword(a, a.PasswordHash, r.Password) == PasswordVerificationResult.Failed)
                 return Error("Incorrect email or password.", 401);
-            if (!a.Verified)
-                return Error("Verify your email before signing in.", 403);
             return Issue(a, c);
         }
     }
@@ -128,7 +97,7 @@ public class AuthService(JsonFileRepository db, IConfiguration configuration, IW
         lock (db.Sync)
         {
             var raw = c.Request.Cookies["ic_refresh"];
-            var a = raw is null ? null : db.Data.Accounts.FirstOrDefault(a => a.RefreshHash == Hash(raw) && a.RefreshExpires > DateTime.UtcNow && a.Verified);
+            var a = raw is null ? null : db.Data.Accounts.FirstOrDefault(a => a.RefreshHash == Hash(raw) && a.RefreshExpires > DateTime.UtcNow);
             return a is null ? Error("Please sign in again.", 401) : Issue(a, c);
         }
     }
